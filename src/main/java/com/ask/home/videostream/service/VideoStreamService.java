@@ -1,5 +1,6 @@
 package com.ask.home.videostream.service;
 
+import com.ask.home.videostream.enumeration.VideoParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +17,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
-
-import static com.ask.home.videostream.constants.ApplicationConstants.*;
 
 @Service
 public class VideoStreamService {
@@ -39,8 +39,8 @@ public class VideoStreamService {
             fileSize = getFileSize(fullFileName);
             if (range == null) {
                 return ResponseEntity.status(HttpStatus.OK)
-                        .header(CONTENT_TYPE, VIDEO_CONTENT + fileType)
-                        .header(CONTENT_LENGTH, String.valueOf(fileSize))
+                        .header(VideoParameter.CONTENT_TYPE.getValue(), VideoParameter.VIDEO_CONTENT.getValue() + fileType)
+                        .header(VideoParameter.CONTENT_LENGTH.getValue(), String.valueOf(fileSize))
                         .body(readByteRange(fullFileName, rangeStart, fileSize - 1)); // Read the object and convert it as bytes
             }
             String[] ranges = range.split("-");
@@ -60,20 +60,20 @@ public class VideoStreamService {
         }
         String contentLength = String.valueOf((rangeEnd - rangeStart) + 1);
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
-                .header(CONTENT_TYPE, VIDEO_CONTENT + fileType)
-                .header(ACCEPT_RANGES, BYTES)
-                .header(CONTENT_LENGTH, contentLength)
-                .header(CONTENT_RANGE, BYTES + " " + rangeStart + "-" + rangeEnd + "/" + fileSize)
+                .header(VideoParameter.CONTENT_TYPE.getValue(), VideoParameter.VIDEO_CONTENT.getValue() + fileType)
+                .header(VideoParameter.ACCEPT_RANGES.getValue(), VideoParameter.BYTES.getValue())
+                .header(VideoParameter.CONTENT_LENGTH.getValue(), contentLength)
+                .header(VideoParameter.CONTENT_RANGE.getValue(), VideoParameter.BYTES.getValue() + " " + rangeStart + "-" + rangeEnd + "/" + fileSize)
                 .body(data);
 
 
     }
 
     public byte[] readByteRange(String filename, long start, long end) throws IOException {
-        Path path = Paths.get(getFilePath(), filename);
+        Path path = Paths.get(Objects.requireNonNull(getFilePath()), filename);
         try (InputStream inputStream = (Files.newInputStream(path));
              ByteArrayOutputStream bufferedOutputStream = new ByteArrayOutputStream()) {
-            byte[] data = new byte[BYTE_RANGE];
+            byte[] data = new byte[Integer.parseInt(VideoParameter.BYTE_RANGE.getValue())];
             int nRead;
             while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
                 bufferedOutputStream.write(data, 0, nRead);
@@ -98,7 +98,7 @@ public class VideoStreamService {
 
     public Long getFileSize(String fileName) {
         return Optional.ofNullable(fileName)
-                .map(file -> Paths.get(getFilePath(), file))
+                .map(file -> Paths.get(Objects.requireNonNull(getFilePath()), file))
                 .map(this::sizeFromFile)
                 .orElse(0L);
     }
