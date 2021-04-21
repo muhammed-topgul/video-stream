@@ -2,6 +2,7 @@ package com.ask.home.videostream.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +25,11 @@ public class VideoStreamService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /**
-     * Prepare the content.
-     *
-     * @param fileName String.
-     * @param fileType String.
-     * @param range    String.
-     * @return ResponseEntity.
-     */
+    @Value("${video.file.path}")
+    private String injectedProperty;
+
     public ResponseEntity<byte[]> prepareContent(String fileName, String fileType, String range) {
+        System.out.println("LL: " + injectedProperty);
         long rangeStart = 0;
         long rangeEnd;
         byte[] data;
@@ -72,15 +69,6 @@ public class VideoStreamService {
 
     }
 
-    /**
-     * ready file byte by byte.
-     *
-     * @param filename String.
-     * @param start    long.
-     * @param end      long.
-     * @return byte array.
-     * @throws IOException exception.
-     */
     public byte[] readByteRange(String filename, long start, long end) throws IOException {
         Path path = Paths.get(getFilePath(), filename);
         try (InputStream inputStream = (Files.newInputStream(path));
@@ -97,15 +85,10 @@ public class VideoStreamService {
         }
     }
 
-    /**
-     * Get the filePath.
-     *
-     * @return String.
-     */
     private String getFilePath() {
         URL url;
         try {
-            url = new FileSystemResource(VIDEO).getURL();
+            url = new FileSystemResource(this.injectedProperty).getURL();
             return new File(url.getFile()).getAbsolutePath();
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,12 +96,6 @@ public class VideoStreamService {
         return null;
     }
 
-    /**
-     * Content length.
-     *
-     * @param fileName String.
-     * @return Long.
-     */
     public Long getFileSize(String fileName) {
         return Optional.ofNullable(fileName)
                 .map(file -> Paths.get(getFilePath(), file))
@@ -126,12 +103,6 @@ public class VideoStreamService {
                 .orElse(0L);
     }
 
-    /**
-     * Getting the size from the path.
-     *
-     * @param path Path.
-     * @return Long.
-     */
     private Long sizeFromFile(Path path) {
         try {
             return Files.size(path);
