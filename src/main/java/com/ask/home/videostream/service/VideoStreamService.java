@@ -26,15 +26,20 @@ public class VideoStreamService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Value("${video.file.path}")
-    private String injectedProperty;
+    private String filePath;
 
-    public ResponseEntity<byte[]> prepareContent(String fileName, String fileType, String range) {
-        System.out.println("LL: " + injectedProperty);
+    @Value("${video.file.name}")
+    private String fileName;
+
+    public ResponseEntity<byte[]> prepareContent(String fileType, String range) {
+        System.out.println("PATH: " + filePath);
+        System.out.println("NAME: " + fileName);
+
         long rangeStart = 0;
         long rangeEnd;
         byte[] data;
         Long fileSize;
-        String fullFileName = fileName + "." + fileType;
+        String fullFileName = this.fileName + "." + fileType;
         try {
             fileSize = getFileSize(fullFileName);
             if (range == null) {
@@ -88,7 +93,7 @@ public class VideoStreamService {
     private String getFilePath() {
         URL url;
         try {
-            url = new FileSystemResource(this.injectedProperty).getURL();
+            url = new FileSystemResource(this.filePath).getURL();
             return new File(url.getFile()).getAbsolutePath();
         } catch (IOException e) {
             e.printStackTrace();

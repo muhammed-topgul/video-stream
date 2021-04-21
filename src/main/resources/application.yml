@@ -5,3 +5,4 @@ server:
 video:
   file:
     path: 'C:\Video\'
+    name: 'videoplayback'
